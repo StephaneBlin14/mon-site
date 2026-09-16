@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de résistance</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f2f4f7;
+        color: #1f2937;
+    }
+    .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 25px;
+    }
+    .card {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.10);
+    }
+    h1 {
+        text-align: center;
+        margin-top: 0;
+        color: #17324d;
+    }
+    .subtitle {
+        text-align: center;
+        color: #667085;
+        margin-bottom: 30px;
+    }
+    .resistor-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 25px 0 35px;
+    }
+    .wire {
+        width: 80px;
+        height: 8px;
+        background: #aaa;
+    }
+    .resistor {
+        width: 300px;
+        height: 90px;
+        border: 2px solid #9a7b4f;
+        border-radius: 45px;
+        background: #e5c28d;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding: 0 35px;
+    }
+    .band {
+        width: 25px;
+        height: 90px;
+        border-radius: 2px;
+    }
+    .gold { background: #d4af37; }
+    .silver { background: #c0c0c0; }
+
+    .selectors {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+    .field label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 7px;
+    }
+    select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccd3db;
+        border-radius: 9px;
+        font-size: 15px;
+        background: white;
+    }
+    .result {
+        margin-top: 30px;
+        padding: 25px;
+        border-radius: 14px;
+        background: #eef6ff;
+        text-align: center;
+    }
+    .result .value {
+        font-size: 34px;
+        font-weight: bold;
+        color: #1261a0;
+        margin: 10px 0;
+    }
+    .tolerance {
+        font-size: 18px;
+    }
+    .range {
+        margin-top: 10px;
+        color: #667085;
+    }
+    .legend {
+        margin-top: 35px;
+    }
+    .legend h2 {
+        font-size: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+    }
+    th, td {
+        padding: 9px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+    }
+    .color-box {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+        border: 1px solid #777;
+        margin-right: 7px;
+        border-radius: 3px;
+    }
+    @media (max-width: 700px) {
+        .selectors { grid-template-columns: repeat(2, 1fr); }
+        .resistor { width: 230px; }
+        .wire { width: 40px; }
+    }
+    @media (max-width: 450px) {
+        .container { padding: 10px; margin: 15px auto; }
+        .card { padding: 18px; }
+        .selectors { grid-template-columns: 1fr; }
+        .resistor { width: 190px; height: 70px; }
+        .band { height: 70px; width: 20px; }
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+<div class="card">
+    <h1>🎨 Calculateur de résistance</h1>
+    <p class="subtitle">Sélectionnez la couleur de chaque anneau pour connaître la valeur de la résistance.</p>
+
+    <div class="resistor-area">
+        <div class="wire"></div>
+        <div class="resistor">
+            <div id="band1" class="band"></div>
+            <div id="band2" class="band"></div>
+            <div id="band3" class="band"></div>
+            <div id="band4" class="band"></div>
+        </div>
+        <div class="wire"></div>
+    </div>
+
+    <div class="selectors">
+        <div class="field">
+            <label for="color1">1er anneau</label>
+            <select id="color1"></select>
+        </div>
+        <div class="field">
+            <label for="color2">2e anneau</label>
+            <select id="color2"></select>
+        </div>
+        <div class="field">
+            <label for="multiplier">Multiplicateur</label>
+            <select id="multiplier"></select>
+        </div>
+        <div class="field">
+            <label for="tolerance">Tolérance</label>
+            <select id="tolerance"></select>
+        </div>
+    </div>
+
+    <div class="result">
+        <div>Valeur de la résistance</div>
+        <div id="value" class="value">1 kΩ</div>
+        <div id="toleranceText" class="tolerance">± 5 %</div>
+        <div id="range" class="range">Valeur réelle : 950 Ω à 1,05 kΩ</div>
+    </div>
+
+    <div class="legend">
+        <h2>📚 Code des couleurs</h2>
+        <table>
+            <thead>
+                <tr><th>Couleur</th><th>Chiffre</th><th>Multiplicateur</th></tr>
+            </thead>
+            <tbody id="legendBody"></tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<script>
+const colors = [
+    {name:"Noir", value:0, multiplier:1, css:"#000000"},
+    {name:"Marron", value:1, multiplier:10, css:"#8B4513"},
+    {name:"Rouge", value:2, multiplier:100, css:"#e53935"},
+    {name:"Orange", value:3, multiplier:1000, css:"#f57c00"},
+    {name:"Jaune", value:4, multiplier:10000, css:"#f4d03f"},
+    {name:"Vert", value:5, multiplier:100000, css:"#2e8b57"},
+    {name:"Bleu", value:6, multiplier:1000000, css:"#1565c0"},
+    {name:"Violet", value:7, multiplier:10000000, css:"#7b1fa2"},
+    {name:"Gris", value:8, multiplier:100000000, css:"#808080"},
+    {name:"Blanc", value:9, multiplier:1000000000, css:"#ffffff"}
+];
+
+const tolerances = [
+    {name:"Or", value:5, css:"#d4af37"},
+    {name:"Argent", value:10, css:"#c0c0c0"},
+    {name:"Aucune", value:20, css:"#d2b48c"}
+];
+
+const color1 = document.getElementById("color1");
+const color2 = document.getElementById("color2");
+const multiplier = document.getElementById("multiplier");
+const tolerance = document.getElementById("tolerance");
+
+function addOptions(select, items, isMultiplier=false) {
+    items.forEach((item, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = isMultiplier
+            ? `${item.name} × ${formatNumber(item.multiplier)}`
+            : item.name;
+        select.appendChild(option);
+    });
+}
+
+addOptions(color1, colors);
+addOptions(color2, colors);
+addOptions(multiplier, colors, true);
+addOptions(tolerance, tolerances);
+
+color1.value = 1;       // Marron
+color2.value = 0;       // Noir
+multiplier.value = 2;   // ×100
+tolerance.value = 0;    // ±5 %
+
+function formatNumber(n) {
+    if (n >= 1000000000) return (n / 1000000000) + " G";
+    if (n >= 1000000) return (n / 1000000) + " M";
+    if (n >= 1000) return (n / 1000) + " k";
+    return n;
+}
+
+function formatResistance(ohms) {
+    if (ohms >= 1000000000) return (ohms / 1000000000).toLocaleString("fr-FR") + " GΩ";
+    if (ohms >= 1000000) return (ohms / 1000000).toLocaleString("fr-FR") + " MΩ";
+    if (ohms >= 1000) return (ohms / 1000).toLocaleString("fr-FR") + " kΩ";
+    return ohms.toLocaleString("fr-FR") + " Ω";
+}
+
+function update() {
+    const c1 = colors[color1.value];
+    const c2 = colors[color2.value];
+    const mult = colors[multiplier.value];
+    const tol = tolerances[tolerance.value];
+
+    const resistance = (c1.value * 10 + c2.value) * mult.multiplier;
+    const min = resistance * (1 - tol.value / 100);
+    const max = resistance * (1 + tol.value / 100);
+
+    document.getElementById("value").textContent = formatResistance(resistance);
+    document.getElementById("toleranceText").textContent =
+        tol.value === 20 ? "± 20 %" : `± ${tol.value} %`;
+    document.getElementById("range").textContent =
+        `Valeur réelle : ${formatResistance(min)} à ${formatResistance(max)}`;
+
+    document.getElementById("band1").style.background = c1.css;
+    document.getElementById("band2").style.background = c2.css;
+    document.getElementById("band3").style.background = mult.css;
+    document.getElementById("band4").style.background = tol.css;
+
+    // Bordure pour les couleurs très claires
+    ["band1","band2","band3","band4"].forEach(id => {
+        const el = document.getElementById(id);
+        el.style.border = ["Blanc","Jaune"].includes(
+            el === document.getElementById("band1") ? c1.name :
+            el === document.getElementById("band2") ? c2.name :
+            el === document.getElementById("band3") ? mult.name : tol.name
+        ) ? "1px solid #777" : "none";
+    });
+}
+
+[color1, color2, multiplier, tolerance].forEach(select => {
+    select.addEventListener("change", update);
+});
+
+const legendBody = document.getElementById("legendBody");
+colors.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td><span class="color-box" style="background:${c.css}"></span>${c.name}</td>
+        <td>${c.value}</td>
+        <td>× ${formatNumber(c.multiplier)}</td>
+    `;
+    legendBody.appendChild(tr);
+});
+
+update();
+</script>
+</body>
+</html>
