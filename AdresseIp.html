@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Calcul réseau IPv4 complet</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        background: #f3f3f3;
+    }
+    .box {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 600px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 16px;
+    }
+    button {
+        background: #0078ff;
+        color: white;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+    }
+    button:hover {
+        background: #005fcc;
+    }
+    #result {
+        margin-top: 20px;
+        font-size: 16px;
+    }
+    b { color: #1a7f00; }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Calcul complet d'un réseau IPv4</h2>
+
+    <label>Adresse IP :</label>
+    <input type="text" id="ip" placeholder="Ex : 192.168.1.10">
+
+    <label>Masque de sous-réseau :</label>
+    <input type="text" id="mask" placeholder="Ex : 255.255.255.0 ou /24">
+
+    <button onclick="calculerReseau()">Calculer</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+function ipToBin(ip) {
+    return ip.split('.').map(octet =>
+        ("00000000" + parseInt(octet).toString(2)).slice(-8)
+    ).join('');
+}
+
+function binToIp(bin) {
+    let ip = [];
+    for (let i = 0; i < 32; i += 8) {
+        ip.push(parseInt(bin.slice(i, i + 8), 2));
+    }
+    return ip.join('.');
+}
+
+function prefixToMask(prefix) {
+    let bits = "1".repeat(prefix) + "0".repeat(32 - prefix);
+    return binToIp(bits);
+}
+
+function binIncrement(bin) {
+    return (BigInt("0b" + bin) + 1n).toString(2).padStart(32, "0");
+}
+
+function binDecrement(bin) {
+    return (BigInt("0b" + bin) - 1n).toString(2).padStart(32, "0");
+}
+
+function calculerReseau() {
+    let ip = document.getElementById("ip").value.trim();
+    let mask = document.getElementById("mask").value.trim();
+    let resultDiv = document.getElementById("result");
+
+    // Si masque sous forme /XX
+    if (mask.startsWith("/")) {
+        let prefix = parseInt(mask.slice(1));
+        if (prefix < 0 || prefix > 32) {
+            resultDiv.innerHTML = "Préfixe invalide.";
+            return;
+        }
+        mask = prefixToMask(prefix);
+    }
+
+    let ipParts = ip.split('.');
+    let maskParts = mask.split('.');
+    if (ipParts.length !== 4 || maskParts.length !== 4) {
+        resultDiv.innerHTML = "Format IP ou masque incorrect.";
+        return;
+    }
+
+    let ipBin = ipToBin(ip);
+    let maskBin = ipToBin(mask);
+
+    // Calcul réseau (AND)
+    let netBin = "";
+    for (let i = 0; i < 32; i++) {
+        netBin += (ipBin[i] === "1" && maskBin[i] === "1") ? "1" : "0";
+    }
+
+    // Adresse de broadcast (réseau + inverse masque)
+    let wildcardBin = maskBin.split('').map(bit => bit === "1" ? "0" : "1").join('');
+    let broadcastBin = "";
+    for (let i = 0; i < 32; i++) {
+        broadcastBin += (netBin[i] === "1" || wildcardBin[i] === "1") ? "1" : "0";
+    }
+
+    let network = binToIp(netBin);
+    let broadcast = binToIp(broadcastBin);
+
+    // Calcul nombre d’adresses
+    let prefixLength = maskBin.split("1").length - 1;
+    let totalAddresses = 2 ** (32 - prefixLength);
+
+    let usableAddresses = totalAddresses > 2 ? totalAddresses - 2 : 0;
+
+    // Adresses utilisables
+    let firstUsable = usableAddresses > 0 ? binToIp(binIncrement(netBin)) : "N/A";
+    let lastUsable = usableAddresses > 0 ? binToIp(binDecrement(broadcastBin)) : "N/A";
+
+    resultDiv.innerHTML = `
+        <p><b>Adresse réseau :</b> ${network}</p>
+        <p><b>Adresse broadcast :</b> ${broadcast}</p>
+        <p><b>Nombre total d'adresses :</b> ${totalAddresses}</p>
+        <p><b>Adresses utilisables :</b> ${usableAddresses}</p>
+        <p><b>Première adresse utilisable :</b> ${firstUsable}</p>
+        <p><b>Dernière adresse utilisable :</b> ${lastUsable}</p>
+    `;
+}
+</script>
+
+</body>
+</html>
