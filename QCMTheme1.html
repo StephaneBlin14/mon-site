@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>QCM Arduino - version autonome</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; line-height:1.45; max-width:900px; margin:18px auto; padding:0 16px; color:#111; }
+  h1,h2 { color:#0b63a8; }
+  .card { border:1px solid #ddd; border-radius:8px; padding:12px 14px; margin:12px 0; background:#fafafa; }
+  .q-title { margin:0 0 8px 0; font-weight:700; }
+  .q-text { margin:6px 0 12px 0; }
+  input[type="text"] { padding:6px; border:1px solid #bbb; border-radius:4px; }
+  .btn { display:inline-block; margin-right:6px; padding:6px 10px; border-radius:6px; border:0; background:#0b63a8; color:white; cursor:pointer; }
+  .btn:disabled { opacity:0.5; cursor:default; }
+  .btn-ghost { background:#efefef; color:#222; border:1px solid #ddd; }
+  .feedback { margin-top:8px; padding:8px; border-radius:6px; display:none; }
+  .feedback.right { background:#e6ffea; border:1px solid #76c28f; color:#0b662e; display:block; }
+  .feedback.wrong { background:#ffecec; border:1px solid #f09; color:#8b0b2b; display:block; }
+  .small { font-size:0.95em; color:#444; }
+  pre { background:#fff; border:1px solid #eee; padding:8px; border-radius:6px; overflow:auto; }
+  .controls { margin-top:8px; }
+  label.radio { margin-right:12px; }
+  .section-title { color:#b31; font-weight:700; margin-top:18px; }
+</style>
+</head>
+<body>
+<h1>QCM (autonome) — Arduino / variables / I/O / fonctions</h1>
+<p class="small">Cette page est autonome : utilise JavaScript interne pour corriger. Chaque bloc a 3 boutons : <em>Valider</em>, <em>Montrer la réponse</em>, <em>Recommencer</em>.</p>
+
+<!-- Helper script -->
+<script>
+/* Utilitaires de validation */
+function showFeedback(id, ok, message) {
+  const f = document.getElementById(id);
+  f.className = 'feedback ' + (ok ? 'right' : 'wrong');
+  f.textContent = message;
+  f.style.display = 'block';
+}
+function hideFeedback(id) {
+  const f = document.getElementById(id);
+  f.style.display = 'none';
+}
+
+/* Cloze text validation (case-insensitive text) */
+function checkCloze(inputId, feedbackId, expectedList) {
+  const v = document.getElementById(inputId).value.trim();
+  if (!v) { showFeedback(feedbackId, false, 'Entrez une réponse puis Valider.'); return; }
+  const val = v.toLowerCase();
+  const ok = expectedList.some(e => val === e.toLowerCase());
+  if (ok) showFeedback(feedbackId, true, '✅ Correct');
+  else showFeedback(feedbackId, false, '❌ Incorrect — réessaie ou utilisez "Montrer la réponse".');
+}
+function showClozeAnswer(inputId, feedbackId, expectedDisplay) {
+  document.getElementById(inputId).value = expectedDisplay;
+  showFeedback(feedbackId, true, 'Réponse : ' + expectedDisplay);
+}
+function restartCloze(inputId, feedbackId) {
+  document.getElementById(inputId).value = '';
+  hideFeedback(feedbackId);
+}
+
+/* True/False check (radio) */
+function checkTF(name, feedbackId, correctIsTrue) {
+  const radios = document.getElementsByName(name);
+  let chosen = null;
+  for (const r of radios) if (r.checked) chosen = r.value;
+  if (chosen === null) { showFeedback(feedbackId, false, 'Sélectionnez "Vrai" ou "Faux".'); return; }
+  const chosenBool = chosen === 'true';
+  if (chosenBool === !!correctIsTrue) showFeedback(feedbackId, true, '✅ Correct');
+  else showFeedback(feedbackId, false, '❌ Incorrect');
+}
+function showTFAnswer(feedbackId, correctIsTrue) {
+  showFeedback(feedbackId, true, 'Réponse : ' + (correctIsTrue ? 'Vrai' : 'Faux'));
+}
+function restartTF(name, feedbackId) {
+  const radios = document.getElementsByName(name);
+  for (const r of radios) r.checked = false;
+  hideFeedback(feedbackId);
+}
+
+/* Some helpers for answers that accept function names / small variants */
+function checkClozeFlexible(inputId, feedbackId, expectedList) {
+  // Accept variants: with/without parentheses etc.
+  const v = document.getElementById(inputId).value.trim();
+  if (!v) { showFeedback(feedbackId, false, 'Entrez une réponse puis Valider.'); return; }
+  const normalized = v.replace(/\s+/g,'').toLowerCase().replace(/\(\)$/,'');
+  const ok = expectedList.some(e => normalized === e.replace(/\s+/g,'').toLowerCase().replace(/\(\)$/,''));
+  if (ok) showFeedback(feedbackId, true, '✅ Correct');
+  else showFeedback(feedbackId, false, '❌ Incorrect');
+}
+</script>
+
+<!-- ------------ QUESTIONS ------------ -->
+
+<!-- Q1 id5316 -->
+<div class="card" id="q5316">
+  <div class="q-title">Partie N°1 — Quiz sur les variables N°1</div>
+  <div class="q-text">On doit mémoriser la valeur d'un capteur de température précis à 0,1°C près. Sa plage est -40/+250°C.<br/>
+  Quelle type de variable doit-on choisir ? (INT, LONG, FLOAT, CHAR, BOOLEAN)</div>
+  <div>
+    <input id="a5316" type="text" style="width:8ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5316','f5316',['FLOAT'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5316','f5316','FLOAT')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5316','f5316')">Recommencer</button>
+    </div>
+    <div id="f5316" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q2 id5317 -->
+<div class="card" id="q5317">
+  <div class="q-title">Quiz sur les variables N°2</div>
+  <div class="q-text">On doit compter le nombre de personnes rentrant dans une salle de cours du lycée.<br/>Quel type de variable doit-on choisir ?</div>
+  <div>
+    <input id="a5317" type="text" style="width:6ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5317','f5317',['INT'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5317','f5317','INT')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5317','f5317')">Recommencer</button>
+    </div>
+    <div id="f5317" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q3 id5318 -->
+<div class="card" id="q5318">
+  <div class="q-title">Quiz sur les variables N°3</div>
+  <div class="q-text">On utilise un capteur de présence qui renvoie une information binaire TOR (0 ou 1).<br/>Quel type de variable doit-on choisir ?</div>
+  <div>
+    <input id="a5318" type="text" style="width:10ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5318','f5318',['BOOLEAN','BOOL'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5318','f5318','BOOLEAN')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5318','f5318')">Recommencer</button>
+    </div>
+    <div id="f5318" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q4 id5319 -->
+<div class="card" id="q5319">
+  <div class="q-title">Quiz sur les variables N°4</div>
+  <div class="q-text">On utilise un clavier 12 touches qui renvoie le code ASCII du caractère correspondant à la touche appuyée.<br/>Quel type de variable doit-on choisir ? (INT, LONG, FLOAT, CHAR, BOOLEAN)</div>
+  <div>
+    <input id="a5319" type="text" style="width:6ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5319','f5319',['CHAR'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5319','f5319','CHAR')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5319','f5319')">Recommencer</button>
+    </div>
+    <div id="f5319" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q5 id5320 -->
+<div class="card" id="q5320">
+  <div class="q-title">Quiz sur les variables N°5</div>
+  <div class="q-text">Notre variable mémorise le nombre d'élèves passés dans le lycée depuis sa création (1920). Quel type de variable ?</div>
+  <div>
+    <input id="a5320" type="text" style="width:6ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5320','f5320',['LONG'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5320','f5320','LONG')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5320','f5320')">Recommencer</button>
+    </div>
+    <div id="f5320" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q6 id5321 -->
+<div class="card" id="q5321">
+  <div class="q-title">Quiz sur les variables N°6</div>
+  <div class="q-text">Qu'est-ce qu'une variable ?<br/>
+  1: Une donnée qui change de valeur<br/>
+  2: Une case mémoire accessible par un nom<br/>
+  3: Une partie du programme modifiable<br/>
+  4: Une instruction modifiable<br/>
+  (Répondre par le numéro)</div>
+  <div>
+    <input id="a5321" type="text" style="width:3ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5321','f5321',['2'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5321','f5321','2')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5321','f5321')">Recommencer</button>
+    </div>
+    <div id="f5321" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q7 id5323 -->
+<div class="card" id="q5323">
+  <div class="q-title">Quiz entrées/sorties N°1</div>
+  <div class="q-text">La carte Arduino Uno possède des entrées analogiques (A0, A1, ...). Pour quel type de signal ces entrées sont-elles prévues ?<br/>
+  1: Tension variable 0–5V<br/>2: Courant variable 0–5A<br/>3: Signal logique TOR (0V ou 5V)</div>
+  <div>
+    <input id="a5323" type="text" style="width:3ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5323','f5323',['1'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5323','f5323','1')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5323','f5323')">Recommencer</button>
+    </div>
+    <div id="f5323" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q8 id5324 -->
+<div class="card" id="q5324">
+  <div class="q-title">Quiz entrées/sorties N°2</div>
+  <div class="q-text">La carte Arduino Uno possède des entrées numériques ("digital"). Pour quel type de signal prévues ?<br/>
+  1: Tension variable 0–5V<br/>2: Courant variable 0–5A<br/>3: Signal logique TOR (0V ou 5V)</div>
+  <div>
+    <input id="a5324" type="text" style="width:3ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5324','f5324',['3'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5324','f5324','3')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5324','f5324')">Recommencer</button>
+    </div>
+    <div id="f5324" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q9 id5314 True/False -->
+<div class="card" id="q5314">
+  <div class="q-title">Quiz entrées/sorties N°3</div>
+  <div class="q-text">Sur la carte Arduino, les entrées analogiques peuvent aussi être utilisées en sorties analogiques.<br/>Cela se paramètre à l'aide d'une instruction placée dans le programme.</div>
+  <div>
+    <label class="radio"><input type="radio" name="tf5314" value="true"> Vrai</label>
+    <label class="radio"><input type="radio" name="tf5314" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5314','f5314',false)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5314',false)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5314','f5314')">Recommencer</button>
+    </div>
+    <div id="f5314" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q10 id5325 True/False -->
+<div class="card" id="q5325">
+  <div class="q-title">Quiz entrées/sorties N°4</div>
+  <div class="q-text">Sur la carte Arduino, les entrées numériques (digital) peuvent aussi être utilisées en sorties numériques (TOR). Cela se paramètre à l'aide d'une instruction placée dans le programme.</div>
+  <div>
+    <label class="radio"><input type="radio" name="tf5325" value="true"> Vrai</label>
+    <label class="radio"><input type="radio" name="tf5325" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5325','f5325',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5325',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5325','f5325')">Recommencer</button>
+    </div>
+    <div id="f5325" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q11 id5326 multiple TF -->
+<div class="card" id="q5326">
+  <div class="q-title">Quiz entrées/sorties N°5 — convertisseur A/N</div>
+  <div class="q-text">
+    <div>Question 1: un convertisseur A/N sur 8 bits => entier entre 0 et 256</div>
+    <div>
+      <label><input type="radio" name="tf5326_0" value="true"> Vrai</label>
+      <label><input type="radio" name="tf5326_0" value="false"> Faux</label>
+      <div class="controls">
+        <button class="btn" onclick="checkTF('tf5326_0','f5326_0',false)">Valider</button>
+        <button class="btn btn-ghost" onclick="showTFAnswer('f5326_0',false)">Montrer la réponse</button>
+        <button class="btn btn-ghost" onclick="restartTF('tf5326_0','f5326_0')">Recommencer</button>
+      </div>
+      <div id="f5326_0" class="feedback"></div>
+    </div>
+
+    <hr style="margin:10px 0">
+
+    <div>Question 2: un convertisseur A/N sur 10 bits => entier entre 0 et 1023</div>
+    <div>
+      <label><input type="radio" name="tf5326_1" value="true"> Vrai</label>
+      <label><input type="radio" name="tf5326_1" value="false"> Faux</label>
+      <div class="controls">
+        <button class="btn" onclick="checkTF('tf5326_1','f5326_1',true)">Valider</button>
+        <button class="btn btn-ghost" onclick="showTFAnswer('f5326_1',true)">Montrer la réponse</button>
+        <button class="btn btn-ghost" onclick="restartTF('tf5326_1','f5326_1')">Recommencer</button>
+      </div>
+      <div id="f5326_1" class="feedback"></div>
+    </div>
+
+    <hr style="margin:10px 0">
+
+    <div>Question 3: un convertisseur A/N sur 12 bits => entier entre 0 et 4096</div>
+    <div>
+      <label><input type="radio" name="tf5326_2" value="true"> Vrai</label>
+      <label><input type="radio" name="tf5326_2" value="false"> Faux</label>
+      <div class="controls">
+        <button class="btn" onclick="checkTF('tf5326_2','f5326_2',false)">Valider</button>
+        <button class="btn btn-ghost" onclick="showTFAnswer('f5326_2',false)">Montrer la réponse</button>
+        <button class="btn btn-ghost" onclick="restartTF('tf5326_2','f5326_2')">Recommencer</button>
+      </div>
+      <div id="f5326_2" class="feedback"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Q12 id5328 cloze: digitalRead -->
+<div class="card" id="q5328">
+  <div class="q-title">Instructions — lire une entrée numérique</div>
+  <div class="q-text">Pour lire l'état d'une entrée numérique, on utilise comme instruction : digitalRead() ? digitalWrite() ? analogRead() ?</div>
+  <div>
+    <input id="a5328" type="text" style="width:14ch">
+    <div class="controls">
+      <button class="btn" onclick="checkClozeFlexible('a5328','f5328',['digitalRead','digitalRead()'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5328','f5328','digitalRead()')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5328','f5328')">Recommencer</button>
+    </div>
+    <div id="f5328" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q13 id5329 cloze: digitalWrite -->
+<div class="card" id="q5329">
+  <div class="q-title">Instructions — allumer une LED</div>
+  <div class="q-text">On veut allumer une led branchée sur une sortie numérique. Quelle instruction ?</div>
+  <div>
+    <input id="a5329" type="text" style="width:14ch">
+    <div class="controls">
+      <button class="btn" onclick="checkClozeFlexible('a5329','f5329',['digitalWrite','digitalWrite()'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5329','f5329','digitalWrite()')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5329','f5329')">Recommencer</button>
+    </div>
+    <div id="f5329" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q14 id5330 moniteur série -->
+<div class="card" id="q5330">
+  <div class="q-title">Moniteur série</div>
+  <div class="q-text">A quoi sert le moniteur série ?<br/>1: il sert à gérer des séries de valeurs<br/>2: ouvre une fenêtre permettant, à l'aide d'instructions, d'afficher ce que l'on veut dans cette fenêtre.</div>
+  <div>
+    <input id="a5330" type="text" style="width:4ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5330','f5330',['2'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5330','f5330','2')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5330','f5330')">Recommencer</button>
+    </div>
+    <div id="f5330" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q15 id5331 vrai/faux: moniteur série -->
+<div class="card" id="q5331">
+  <div class="q-title">Moniteur série — utilisation</div>
+  <div class="q-text">Le moniteur série sert à déboguer et mettre au point les programmes.</div>
+  <div>
+    <label><input type="radio" name="tf5331" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5331" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5331','f5331',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5331',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5331','f5331')">Recommencer</button>
+    </div>
+    <div id="f5331" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q16 id5332 boucle for -->
+<div class="card" id="q5332">
+  <div class="q-title">Boucles — for()</div>
+  <div class="q-text">On a : <code>for (i=0 ; i&lt;10 ; i=i+2)</code><br/>Elle permet :</div>
+  <div>
+    <p class="small">Choisir le numéro correspondant :</p>
+    <ol>
+      <li>boucle 9 fois</li>
+      <li>boucle 10 fois</li>
+      <li>boucle 11 fois</li>
+      <li>boucle 4 fois</li>
+      <li>boucle 5 fois</li>
+    </ol>
+    <input id="a5332" type="text" style="width:4ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5332','f5332',['5'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5332','f5332','5')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5332','f5332')">Recommencer</button>
+    </div>
+    <div id="f5332" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q17 id5333 fin d'instruction -->
+<div class="card" id="q5333">
+  <div class="q-title">Terminer une instruction en C</div>
+  <div class="q-text">Pour terminer une instruction en langage C (version Arduino) il faut mettre :<br/>1: une virgule ,<br/>2: un point-virgule ;<br/>3: deux points :<br/>4: rien du tout</div>
+  <div>
+    <input id="a5333" type="text" style="width:4ch">
+    <div class="controls">
+      <button class="btn" onclick="checkCloze('a5333','f5333',['2'])">Valider</button>
+      <button class="btn btn-ghost" onclick="showClozeAnswer('a5333','f5333','2')">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartCloze('a5333','f5333')">Recommencer</button>
+    </div>
+    <div id="f5333" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q18 functions (perimetre) id5336 -->
+<div class="card" id="q5336">
+  <div class="q-title">Que renvoie cette fonction ?</div>
+  <div class="q-text">
+    <pre>float perimetre_cercle (float ray) {
+  float per;
+  per = 2*pi*ray;
+  return per;
+}</pre>
+    <p>Question 1: Cette fonction ne renvoie rien.</p>
+    <label><input type="radio" name="tf5336_0" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5336_0" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5336_0','f5336_0',false)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5336_0',false)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5336_0','f5336_0')">Recommencer</button>
+    </div>
+    <div id="f5336_0" class="feedback"></div>
+
+    <hr style="margin:10px 0">
+    <p>Question 2: cette fonction renvoie le contenu de <code>per</code> (de type float).</p>
+    <label><input type="radio" name="tf5336_1" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5336_1" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5336_1','f5336_1',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5336_1',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5336_1','f5336_1')">Recommencer</button>
+    </div>
+    <div id="f5336_1" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q19 id5337 où placer fonction (4 propositions) -->
+<div class="card" id="q5337">
+  <div class="q-title">Où placer une fonction ? (choix Vrai/Faux pour chaque proposition)</div>
+  <div class="q-text small">
+    <p>Propositions (extraits) — cochez Vrai si la proposition est correcte.</p>
+  </div>
+
+  <div>
+    <p><strong>Proposition 1</strong> : définition de la fonction (float perimetre_cercle) placée <em>avant</em> <code>setup()</code> puis <code>loop()</code>. → correcte</p>
+    <label><input type="radio" name="tf5337_0" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5337_0" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5337_0','f5337_0',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5337_0',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5337_0','f5337_0')">Recommencer</button>
+    </div>
+    <div id="f5337_0" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p><strong>Proposition 2</strong> : même idée (fonction définie entre le début du fichier et le <code>loop()</code>) — correcte</p>
+    <label><input type="radio" name="tf5337_1" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5337_1" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5337_1','f5337_1',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5337_1',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5337_1','f5337_1')">Recommencer</button>
+    </div>
+    <div id="f5337_1" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p><strong>Proposition 3</strong> : fonction définie <em>à l'intérieur</em> du loop() (ou mal placée) — incorrecte</p>
+    <label><input type="radio" name="tf5337_2" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5337_2" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5337_2','f5337_2',false)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5337_2',false)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5337_2','f5337_2')">Recommencer</button>
+    </div>
+    <div id="f5337_2" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p><strong>Proposition 4</strong> : fonction définie après le loop() (toujours acceptable en C, donc correcte)</p>
+    <label><input type="radio" name="tf5337_3" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5337_3" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5337_3','f5337_3',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5337_3',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5337_3','f5337_3')">Recommencer</button>
+    </div>
+    <div id="f5337_3" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q20 id5338 global/local -->
+<div class="card" id="q5338">
+  <div class="q-title">Variables locales ou globales</div>
+  <div class="q-text small">
+    <p>On reprend l'exemple : <code>float pi = 3.141592654;</code> (déclarée en début de fichier), <code>float perimetre;</code> (déclarée en début de fichier), <code>float per;</code> (déclarée dans la fonction), <code>float ray</code> (paramètre de la fonction).</p>
+  </div>
+
+  <div>
+    <p>1) La variable "pi" est une variable globale</p>
+    <label><input type="radio" name="tf5338_0" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5338_0" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5338_0','f5338_0',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5338_0',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5338_0','f5338_0')">Recommencer</button>
+    </div>
+    <div id="f5338_0" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p>2) La variable "perimetre" est une variable globale</p>
+    <label><input type="radio" name="tf5338_1" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5338_1" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5338_1','f5338_1',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5338_1',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5338_1','f5338_1')">Recommencer</button>
+    </div>
+    <div id="f5338_1" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p>3) La variable "per" (définie dans la fonction) est une variable globale</p>
+    <label><input type="radio" name="tf5338_2" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5338_2" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5338_2','f5338_2',false)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5338_2',false)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5338_2','f5338_2')">Recommencer</button>
+    </div>
+    <div id="f5338_2" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p>4) La variable "ray" (paramètre) est une variable globale</p>
+    <label><input type="radio" name="tf5338_3" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5338_3" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5338_3','f5338_3',false)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5338_3',false)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5338_3','f5338_3')">Recommencer</button>
+    </div>
+    <div id="f5338_3" class="feedback"></div>
+  </div>
+
+  <hr style="margin:10px 0">
+
+  <div>
+    <p>5) Une variable globale est accessible de n'importe quel endroit du programme</p>
+    <label><input type="radio" name="tf5338_4" value="true"> Vrai</label>
+    <label><input type="radio" name="tf5338_4" value="false"> Faux</label>
+    <div class="controls">
+      <button class="btn" onclick="checkTF('tf5338_4','f5338_4',true)">Valider</button>
+      <button class="btn btn-ghost" onclick="showTFAnswer('f5338_4',true)">Montrer la réponse</button>
+      <button class="btn btn-ghost" onclick="restartTF('tf5338_4','f5338_4')">Recommencer</button>
+    </div>
+    <div id="f5338_4" class="feedback"></div>
+  </div>
+</div>
+
+<!-- Q21 id5340 moyenne4 -->
+<div class="card" id="q5340">
+  <div class="q-title">Activité "remplir les blancs" — fonction moyenne4</div>
+  <div class="q-text">
+    <pre>
+note4 = 11;
+moy_trim = moyenne4 (12 , 10 , 14 , note4);
+    </pre>
+    <p>Que valent n1, n2, n3, n4 ?</p>
+  </div>
+  <div>
+    <div>
+      n1 = <input id="a5340_0" type="text" style="width:4ch">
+      n2 = <input id="a5340_1" type="text" style="width:4ch">
+      n3 = <input id="a5340_2" type="text" style="width:4ch">
+      n4 = <input id="a5340_3" type="text" style="width:4ch">
+    </div>
+    <div class="controls" style="margin-top:8px;">
+      <button class="btn" onclick="
+        (function(){
+          const a0=document.getElementById('a5340_0').value.trim();
+          const a1=document.getElementById('a5340_1').value.trim();
+          const a2=document.getElementById('a5340_2').value.trim();
+          const a3=document.getElementById('a5340_3').value.trim();
+          if(a0===''||a1===''||a2===''||a3===''){ showFeedback('f5340',false,'Remplissez les 4 champs.'); return; }
+          const ok = (a0==='12' && a1==='10' && a2==='14' && a3==='11');
+          if(ok) showFeedback('f5340',true,'✅ Correct');
+          else showFeedback('f5340',false,'❌ Quelques valeurs sont incorrectes.');
+        })()
+      ">Valider</button>
+
+      <button class="btn btn-ghost" onclick="
+        document.getElementById('a5340_0').value='12';
+        document.getElementById('a5340_1').value='10';
+        document.getElementById('a5340_2').value='14';
+        document.getElementById('a5340_3').value='11';
+        showFeedback('f5340',true,'Réponses remplies : n1=12, n2=10, n3=14, n4=11');
+      ">Montrer la réponse</button>
+
+      <button class="btn btn-ghost" onclick="
+        document.getElementById('a5340_0').value='';
+        document.getElementById('a5340_1').value='';
+        document.getElementById('a5340_2').value='';
+        document.getElementById('a5340_3').value='';
+        hideFeedback('f5340');
+      ">Recommencer</button>
+    </div>
+    <div id="f5340" class="feedback"></div>
+  </div>
+</div>
+
+<!-- End -->
+</body>
+</html>
