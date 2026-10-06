@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur - Pont Diviseur de Tension</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #eef2f7;
+        color: #222;
+    }
+
+    header {
+        background: #17365d;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+
+    header h1 {
+        margin: 0;
+        font-size: 28px;
+    }
+
+    header p {
+        margin: 8px 0 0;
+        font-size: 16px;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 25px auto;
+        padding: 0 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    }
+
+    h2 {
+        color: #17365d;
+        margin-top: 0;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .input-line {
+        display: flex;
+        gap: 8px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 11px;
+        font-size: 16px;
+        border: 1px solid #bbb;
+        border-radius: 6px;
+    }
+
+    select {
+        max-width: 100px;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 7px;
+        background: #17365d;
+        color: white;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0e2948;
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 20px;
+        background: #e8f4ff;
+        border-left: 5px solid #17365d;
+        border-radius: 6px;
+    }
+
+    .result-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #17365d;
+    }
+
+    .formula {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 7px;
+        font-family: "Courier New", monospace;
+        font-size: 18px;
+        text-align: center;
+        margin: 12px 0;
+    }
+
+    .mode-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .mode-buttons button {
+        background: #ddd;
+        color: #222;
+    }
+
+    .mode-buttons button.active {
+        background: #17365d;
+        color: white;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .warning {
+        margin-top: 15px;
+        padding: 12px;
+        background: #fff3cd;
+        border-left: 5px solid #ffc107;
+        border-radius: 5px;
+    }
+
+    .schema {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+    }
+
+    .circuit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 17px;
+    }
+
+    .wire {
+        width: 4px;
+        height: 35px;
+        background: #333;
+    }
+
+    .resistor {
+        width: 100px;
+        height: 55px;
+        border: 3px solid #333;
+        background: #f5c26b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border-radius: 4px;
+    }
+
+    .node {
+        width: 15px;
+        height: 15px;
+        background: #d71920;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .vout {
+        position: absolute;
+        left: 30px;
+        white-space: nowrap;
+        font-weight: bold;
+        color: #d71920;
+    }
+
+    .ground {
+        margin-top: 5px;
+        font-size: 30px;
+    }
+
+    .current {
+        color: #0077aa;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 800px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Calculateur de pont diviseur de tension</h1>
+    <p>Outil pédagogique pour calculer les tensions, résistances et courants</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>1. Choisir le calcul à effectuer</h2>
+
+        <div class="mode-buttons">
+            <button id="btnVout" class="active" onclick="setMode('vout')">
+                Calculer Vout
+            </button>
+
+            <button id="btnR2" onclick="setMode('r2')">
+                Calculer R2
+            </button>
+
+            <button id="btnVin" onclick="setMode('vin')">
+                Calculer Vin
+            </button>
+        </div>
+
+        <!-- CALCUL VOUT -->
+        <div id="modeVout">
+
+            <div class="layout">
+
+                <div>
+
+                    <div class="form-group">
+                        <label>Vin :</label>
+                        <div class="input-line">
+                            <input type="number" id="vin" value="12" step="any">
+                            <select id="unitVin">
+                                <option value="1">V</option>
+                                <option value="0.001">mV</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>R1 :</label>
+                        <div class="input-line">
+                            <input type="number" id="r1" value="10000" step="any">
+                            <select id="unitR1">
+                                <option value="1">Ω</option>
+                                <option value="1000">kΩ</option>
+                                <option value="1000000">MΩ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>R2 :</label>
+                        <div class="input-line">
+                            <input type="number" id="r2" value="10000" step="any">
+                            <select id="unitR2">
+                                <option value="1">Ω</option>
+                                <option value="1000">kΩ</option>
+                                <option value="1000000">MΩ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="calculerVout()">Calculer Vout</button>
+
+                    <div id="resultVout"></div>
+
+                </div>
+
+                <div class="schema">
+                    <div class="circuit">
+
+                        <div>+ Vin</div>
+                        <div class="wire"></div>
+
+                        <div class="resistor">R1</div>
+
+                        <div class="wire"></div>
+
+                        <div class="node">
+                            <span class="vout">Vout</span>
+                        </div>
+
+                        <div class="wire"></div>
+
+                        <div class="resistor">R2</div>
+
+                        <div class="wire"></div>
+
+                        <div class="ground">⏚</div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- CALCUL R2 -->
+        <div id="modeR2" class="hidden">
+
+            <div class="form-group">
+                <label>Vin :</label>
+                <input type="number" id="vinR2" value="12" step="any">
+            </div>
+
+            <div class="form-group">
+                <label>Vout :</label>
+                <input type="number" id="voutR2" value="6" step="any">
+            </div>
+
+            <div class="form-group">
+                <label>R1 :</label>
+                <input type="number" id="r1R2" value="10000" step="any">
+            </div>
+
+            <button onclick="calculerR2()">Calculer R2</button>
+
+            <div id="resultR2"></div>
+
+        </div>
+
+
+        <!-- CALCUL VIN -->
+        <div id="modeVin" class="hidden">
+
+            <div class="form-group">
+                <label>Vout :</label>
+                <input type="number" id="voutVin" value="6" step="any">
+            </div>
+
+            <div class="form-group">
+                <label>R1 :</label>
+                <input type="number" id="r1Vin" value="10000" step="any">
+            </div>
+
+            <div class="form-group">
+                <label>R2 :</label>
+                <input type="number" id="r2Vin" value="10000" step="any">
+            </div>
+
+            <button onclick="calculerVin()">Calculer Vin</button>
+
+            <div id="resultVin"></div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>2. Formule du pont diviseur</h2>
+
+        <div class="formula">
+            Vout = Vin × R2 / (R1 + R2)
+        </div>
+
+        <p>
+            La tension de sortie est mesurée aux bornes de
+            <strong>R2</strong>.
+        </p>
+
+        <div class="formula">
+            I = Vin / (R1 + R2)
+        </div>
+
+        <p>
+            Le courant qui traverse R1 et R2 est le même
+            (dans le cas d'une charge négligeable).
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>3. Exemple</h2>
+
+        <p>
+            On considère :
+        </p>
+
+        <ul>
+            <li>Vin = 12 V</li>
+            <li>R1 = 10 kΩ</li>
+            <li>R2 = 10 kΩ</li>
+        </ul>
+
+        <div class="formula">
+            Vout = 12 × 10000 / (10000 + 10000)
+        </div>
+
+        <div class="formula">
+            Vout = 6 V
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function setMode(mode) {
+
+    document.getElementById("modeVout").classList.add("hidden");
+    document.getElementById("modeR2").classList.add("hidden");
+    document.getElementById("modeVin").classList.add("hidden");
+
+    document.getElementById("btnVout").classList.remove("active");
+    document.getElementById("btnR2").classList.remove("active");
+    document.getElementById("btnVin").classList.remove("active");
+
+    if (mode === "vout") {
+        document.getElementById("modeVout").classList.remove("hidden");
+        document.getElementById("btnVout").classList.add("active");
+    }
+
+    if (mode === "r2") {
+        document.getElementById("modeR2").classList.remove("hidden");
+        document.getElementById("btnR2").classList.add("active");
+    }
+
+    if (mode === "vin") {
+        document.getElementById("modeVin").classList.remove("hidden");
+        document.getElementById("btnVin").classList.add("active");
+    }
+}
+
+
+function calculerVout() {
+
+    let vin = parseFloat(document.getElementById("vin").value)
+        * parseFloat(document.getElementById("unitVin").value);
+
+    let r1 = parseFloat(document.getElementById("r1").value)
+        * parseFloat(document.getElementById("unitR1").value);
+
+    let r2 = parseFloat(document.getElementById("r2").value)
+        * parseFloat(document.getElementById("unitR2").value);
+
+    if (isNaN(vin) || isNaN(r1) || isNaN(r2) || r1 < 0 || r2 <= 0) {
+        document.getElementById("resultVout").innerHTML =
+            '<div class="warning">Veuillez vérifier les valeurs saisies.</div>';
+        return;
+    }
+
+    let vout = vin * r2 / (r1 + r2);
+    let courant = vin / (r1 + r2);
+
+    document.getElementById("resultVout").innerHTML = `
+        <div class="result">
+            <div>Résultat :</div>
+            <div class="result-value">
+                Vout = ${vout.toFixed(3)} V
+            </div>
+
+            <div class="current">
+                Courant dans le pont :
+                ${(courant * 1000).toFixed(3)} mA
+            </div>
+
+            <div class="formula">
+                Vout = ${vin} × ${r2} / (${r1} + ${r2})
+            </div>
+        </div>
+    `;
+}
+
+
+function calculerR2() {
+
+    let vin = parseFloat(document.getElementById("vinR2").value);
+    let vout = parseFloat(document.getElementById("voutR2").value);
+    let r1 = parseFloat(document.getElementById("r1R2").value);
+
+    if (isNaN(vin) || isNaN(vout) || isNaN(r1) ||
+        vin <= vout || vout <= 0 || r1 <= 0) {
+
+        document.getElementById("resultR2").innerHTML =
+            '<div class="warning">Il faut avoir Vin > Vout et des valeurs positives.</div>';
+
+        return;
+    }
+
+    let r2 = (vout * r1) / (vin - vout);
+
+    document.getElementById("resultR2").innerHTML = `
+        <div class="result">
+            <div>Résultat :</div>
+            <div class="result-value">
+                R2 = ${formatResistance(r2)}
+            </div>
+
+            <div class="formula">
+                R2 = Vout × R1 / (Vin - Vout)
+            </div>
+        </div>
+    `;
+}
+
+
+function calculerVin() {
+
+    let vout = parseFloat(document.getElementById("voutVin").value);
+    let r1 = parseFloat(document.getElementById("r1Vin").value);
+    let r2 = parseFloat(document.getElementById("r2Vin").value);
+
+    if (isNaN(vout) || isNaN(r1) || isNaN(r2) ||
+        r1 <= 0 || r2 <= 0) {
+
+        document.getElementById("resultVin").innerHTML =
+            '<div class="warning">Veuillez vérifier les valeurs saisies.</div>';
+
+        return;
+    }
+
+    let vin = vout * (r1 + r2) / r2;
+
+    document.getElementById("resultVin").innerHTML = `
+        <div class="result">
+            <div>Résultat :</div>
+            <div class="result-value">
+                Vin = ${vin.toFixed(3)} V
+            </div>
+
+            <div class="formula">
+                Vin = Vout × (R1 + R2) / R2
+            </div>
+        </div>
+    `;
+}
+
+
+function formatResistance(r) {
+
+    if (r >= 1000000) {
+        return (r / 1000000).toFixed(3) + " MΩ";
+    }
+
+    if (r >= 1000) {
+        return (r / 1000).toFixed(3) + " kΩ";
+    }
+
+    return r.toFixed(2) + " Ω";
+}
+
+</script>
+
+</body>
+</html>
+```
