@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Web IDE</title>
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#1e1e1e;
+    color:#eee;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+header{
+    height:64px;
+    background:#252526;
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    border-bottom:1px solid #3e3e42;
+}
+header h1{font-size:20px;margin:0 25px 0 0;color:#fff}
+.status{
+    font-size:13px;
+    color:#8bc34a;
+}
+.toolbar{
+    margin-left:auto;
+    display:flex;
+    gap:8px;
+}
+button{
+    border:0;
+    border-radius:5px;
+    padding:9px 14px;
+    cursor:pointer;
+    font-weight:bold;
+    color:white;
+    background:#3f3f46;
+}
+button:hover{filter:brightness(1.2)}
+.run{background:#16825d}
+.clear{background:#9b3d3d}
+.save{background:#315d9b}
+.main{
+    flex:1;
+    display:grid;
+    grid-template-columns:55% 45%;
+    min-height:0;
+}
+.panel{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+}
+.panel-title{
+    height:38px;
+    padding:10px 15px;
+    background:#2d2d30;
+    border-bottom:1px solid #3e3e42;
+    font-size:13px;
+    font-weight:bold;
+}
+.editor-wrap{
+    flex:1;
+    position:relative;
+    min-height:0;
+}
+textarea{
+    width:100%;
+    height:100%;
+    resize:none;
+    border:0;
+    outline:0;
+    padding:18px;
+    background:#1e1e1e;
+    color:#d4d4d4;
+    font-family:"Consolas","Courier New",monospace;
+    font-size:16px;
+    line-height:1.55;
+    tab-size:4;
+}
+.console{
+    border-left:1px solid #3e3e42;
+}
+#output{
+    flex:1;
+    margin:0;
+    padding:18px;
+    overflow:auto;
+    white-space:pre-wrap;
+    font-family:"Consolas","Courier New",monospace;
+    font-size:15px;
+    line-height:1.5;
+    color:#d4d4d4;
+}
+.info{
+    color:#777;
+}
+.error{
+    color:#ff7777;
+}
+footer{
+    height:32px;
+    background:#007acc;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    font-size:12px;
+}
+@media(max-width:800px){
+    .main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+    .console{border-left:0;border-top:1px solid #3e3e42}
+}
+</style>
+</head>
+
+<body>
+<header>
+    <h1>🐍 Python Web IDE</h1>
+    <span class="status" id="status">Chargement de Python...</span>
+    <div class="toolbar">
+        <button class="run" onclick="runPython()">▶ Exécuter</button>
+        <button class="clear" onclick="clearConsole()">🗑 Effacer</button>
+        <button class="save" onclick="saveFile()">💾 Enregistrer</button>
+    </div>
+</header>
+
+<div class="main">
+    <section class="panel">
+        <div class="panel-title">PROGRAMME.PY</div>
+        <div class="editor-wrap">
+<textarea id="code" spellcheck="false"># Mon premier programme Python
+
+nom = input("Quel est ton prénom ? ")
+age = int(input("Quel âge as-tu ? "))
+
+print()
+print("Bonjour", nom)
+print("Tu as", age, "ans.")
+
+if age >= 18:
+    print("Tu es majeur.")
+else:
+    print("Tu es mineur.")
+</textarea>
+        </div>
+    </section>
+
+    <section class="panel console">
+        <div class="panel-title">CONSOLE</div>
+        <pre id="output"><span class="info">Initialisation de Python...</span></pre>
+    </section>
+</div>
+
+<footer>
+    Python exécuté directement dans le navigateur avec Pyodide
+</footer>
+
+<script>
+let pyodide = null;
+
+const output = document.getElementById("output");
+const statusText = document.getElementById("status");
+const codeArea = document.getElementById("code");
+
+function writeOutput(text, cls=""){
+    const span = document.createElement("span");
+    span.textContent = text;
+    if(cls) span.className = cls;
+    output.appendChild(span);
+    output.scrollTop = output.scrollHeight;
+}
+
+function clearConsole(){
+    output.textContent = "";
+}
+
+async function loadPython(){
+    try{
+        pyodide = await loadPyodide();
+        statusText.textContent = "● Python prêt";
+        statusText.style.color = "#8bc34a";
+        output.textContent = "";
+        writeOutput("Python est prêt. Cliquez sur « Exécuter » pour lancer votre programme.\n\n","info");
+    }catch(e){
+        statusText.textContent = "Erreur de chargement";
+        statusText.style.color = "#ff7777";
+        output.textContent = "";
+        writeOutput("Impossible de charger Python :\n" + e,"error");
+    }
+}
+
+async function runPython(){
+    if(!pyodide){
+        clearConsole();
+        writeOutput("Python est encore en cours de chargement...","info");
+        return;
+    }
+
+    clearConsole();
+    const code = codeArea.value;
+
+    try{
+        // Redirige print() vers la console HTML.
+        pyodide.setStdout({
+            batched: (msg) => writeOutput(msg + "\n")
+        });
+
+        pyodide.setStderr({
+            batched: (msg) => writeOutput(msg + "\n","error")
+        });
+
+        // input() personnalisé : utilise une boîte de dialogue.
+        pyodide.globals.set("input", function(message=""){
+            const answer = window.prompt(message);
+            return answer === null ? "" : answer;
+        });
+
+        await pyodide.runPythonAsync(code);
+
+    }catch(error){
+        writeOutput("\n" + error + "\n","error");
+    }
+}
+
+function saveFile(){
+    const blob = new Blob([codeArea.value], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "programme.py";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Ctrl + Entrée = exécuter
+codeArea.addEventListener("keydown", function(e){
+    if(e.ctrlKey && e.key === "Enter"){
+        e.preventDefault();
+        runPython();
+    }
+
+    // Tab insère 4 espaces
+    if(e.key === "Tab"){
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0,start) + "    " + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+    }
+});
+</script>
+
+<!-- Pyodide : interpréteur Python exécuté dans le navigateur -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+<script>
+loadPython();
+</script>
+
+</body>
+</html>
