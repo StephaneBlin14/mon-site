@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entraînement – Lois de l'électronique</title>
+<style>
+:root{--blue:#155eef;--navy:#172b4d;--bg:#f3f6fb;--line:#d9e1ee;--muted:#5e6b80;--green:#137547;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#172033;font:16px/1.5 system-ui,Segoe UI,Arial,sans-serif}header{background:linear-gradient(120deg,#102a56,#155eef);color:#fff;padding:26px 18px}header>div,main{max-width:1050px;margin:auto}h1{margin:0;font-size:clamp(1.6rem,4vw,2.3rem)}header p{margin:5px 0 0;color:#e1eaff}main{padding:18px 14px 45px}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;margin:14px 0;box-shadow:0 4px 16px #1d35570a}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.muted{color:var(--muted)}button,select,input{font:inherit}button{border:0;border-radius:9px;padding:10px 14px;font-weight:650;cursor:pointer;background:#e8eef8;color:#172033}button.primary{background:var(--blue);color:white}button.dark{background:var(--navy);color:white}button:disabled{opacity:.45;cursor:not-allowed}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tabs button.active{background:var(--blue);color:white}.panel.hidden{display:none}.field{margin:14px 0;padding-top:13px;border-top:1px solid var(--line)}.field label{display:block;font-weight:650;margin-bottom:6px}.field input{width:170px;max-width:60%;border:1px solid #b9c5d8;border-radius:8px;padding:9px 10px}.unit{color:var(--muted);margin-left:5px}.feedback{font-size:.94rem;margin-top:6px}.good{color:var(--green)}.bad{color:var(--red)}.hint{background:#eff5ff;padding:11px 13px;border-radius:9px}.score{font-size:1.15rem;font-weight:750}.tiny{font-size:.88rem}.diagram{border:1px solid #bfccdf;background:#fff;border-radius:10px;padding:14px;margin:12px 0;overflow-x:auto}.diagram svg{display:block;max-width:100%;height:auto;min-width:300px}.diagram strong{display:block;margin-bottom:8px;color:#172b4d}.pill{display:inline-block;border-radius:99px;background:#e8eef8;padding:3px 9px;font-size:.85rem}.progress{height:8px;background:#e5eaf3;border-radius:20px;overflow:hidden;flex:1;min-width:100px}.progress span{display:block;height:100%;background:#155eef;width:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.stat{background:#f7f9fd;border-radius:10px;padding:12px}.stat strong{display:block;font-size:1.35rem}.hidden{display:none!important}@media print{header{background:white;color:#172033;padding:8px}header p{color:#172033}.tabs,.actions,.no-print,button{display:none!important}body{background:white}.card{box-shadow:none;break-inside:avoid}.panel.hidden{display:block!important}}
+</style>
+</head>
+<body>
+<header><div><h1>Les lois de l’électronique</h1><p>Entraînement interactif · Lycée / STI2D</p></div></header>
+<main>
+<div class="card">
+<div class="row between"><div><strong>Mode entraînement</strong><div class="muted tiny">Les valeurs changent à chaque nouvelle série. Les réponses sont corrigées automatiquement.</div></div><span class="pill" id="levelPill">Niveau progressif</span></div>
+<div class="row" style="margin-top:12px"><label for="level"><strong>Difficulté :</strong></label><select id="level"><option value="1">Niveau 1 — Application directe</option><option value="2" selected>Niveau 2 — Intermédiaire</option><option value="3">Niveau 3 — Approfondissement</option></select><button class="primary" id="newSet">Nouvelle série</button></div>
+<div class="row" style="margin-top:14px"><div class="progress"><span id="progressBar"></span></div><span id="progressText" class="tiny muted">0 réponse vérifiée</span></div>
+</div>
+<div class="tabs no-print" role="tablist">
+<button class="active" data-tab="ohm">1. Loi d’Ohm</button><button data-tab="noeuds">2. Loi des nœuds</button><button data-tab="resistances">3. Résistances</button><button data-tab="pont">4. Pont diviseur</button><button data-tab="mixte">5. Circuit mixte</button>
+</div>
+<section id="ohm" class="panel">
+<div class="card"><h2>1. Loi d’Ohm</h2><p>Complète les calculs. Pense à vérifier les unités : <span class="pill">U = R × I</span></p><div id="ohmFields"></div><div class="row actions no-print"><button class="primary" onclick="checkPanel('ohm')">Vérifier</button><button onclick="showKey('ohm')">Afficher le corrigé</button><button onclick="resetPanel('ohm')">Effacer</button></div><div class="score" id="score-ohm"></div><div class="answer-key muted" id="key-ohm"></div></div>
+</section>
+<section id="noeuds" class="panel hidden">
+<div class="card"><h2>2. Loi des nœuds</h2><p>Au nœud, i₁ et i₂ entrent dans le nœud ; i₃ et i₄ en sortent. Calcule le courant inconnu.</p><div class="diagram"><svg viewBox="0 0 620 210" width="100%" role="img" aria-label="Loi des nœuds : i1 et i2 entrent dans le nœud, i3 et i4 en sortent">
+<style>.wire{stroke:#26364b;stroke-width:3;fill:none;stroke-linecap:round}.arr{stroke:#0875d1;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}.lab{font: bold 17px system-ui;fill:#172033}.val{font:16px system-ui;fill:#172033}.node{fill:#172033}</style>
+<path class="wire" d="M95 55 L285 100 M95 155 L285 110 M335 100 L525 55 M335 110 L525 155"/>
+<path class="arr" d="M205 81 l18 4 -12 14 M205 129 l18 -4 -12 -14 M405 82 l-18 -2 8 -14 M405 128 l-18 2 8 14"/>
+<circle class="node" cx="310" cy="105" r="8"/>
+<text class="lab" x="28" y="35">i₁ entre</text><text class="val" x="28" y="53"> <tspan id="n1">10</tspan> mA</text>
+<text class="lab" x="28" y="185">i₂ entre</text><text class="val" x="28" y="205"><tspan id="n2">7</tspan> mA</text>
+<text class="lab" x="445" y="35">i₃ sort</text><text class="val" x="445" y="53">? mA</text>
+<text class="lab" x="445" y="185">i₄ sort</text><text class="val" x="445" y="205"><tspan id="n4">9</tspan> mA</text>
+</svg></div><div class="field"><label for="nodeAns">i₃ =</label><input id="nodeAns" inputmode="decimal"><span class="unit">mA</span><div class="feedback" id="fb-nodeAns"></div></div><div class="row actions no-print"><button class="primary" onclick="checkPanel('noeuds')">Vérifier</button><button onclick="showKey('noeuds')">Afficher le corrigé</button><button onclick="resetPanel('noeuds')">Effacer</button></div><div class="score" id="score-noeuds"></div><div class="answer-key muted" id="key-noeuds"></div></div>
+</section>
+<section id="resistances" class="panel hidden">
+<div class="card"><h2>3. Association de résistances</h2><p>Les résistances R₁, R₂ et R₃ sont données en kΩ. Calcule les résistances équivalentes.</p><div class="diagram"><strong>A — En série</strong><svg viewBox="0 0 620 100" width="100%" role="img" aria-label="Trois résistances en série">
+<style>.wire{stroke:#26364b;stroke-width:3;fill:none}.res{fill:#fff;stroke:#0875d1;stroke-width:3}.lab{font:bold 18px system-ui;fill:#172033}</style>
+<path class="wire" d="M25 55 H105 M175 55 H265 M335 55 H425 M495 55 H595"/>
+<rect class="res" x="105" y="40" width="70" height="30" rx="3"/><rect class="res" x="265" y="40" width="70" height="30" rx="3"/><rect class="res" x="425" y="40" width="70" height="30" rx="3"/>
+<text class="lab" x="140" y="28" text-anchor="middle">R₁</text><text class="lab" x="300" y="28" text-anchor="middle">R₂</text><text class="lab" x="460" y="28" text-anchor="middle">R₃</text>
+</svg><div id="resValues"></div></div><div class="field"><label for="series">1. R équivalente en série</label><input id="series" inputmode="decimal"><span class="unit">kΩ</span><div class="feedback" id="fb-series"></div></div><div class="diagram"><strong>B — En parallèle</strong><svg viewBox="0 0 620 190" width="100%" role="img" aria-label="Trois résistances branchées en parallèle entre deux rails">
+<style>.wire{stroke:#26364b;stroke-width:3;fill:none}.res{fill:#fff;stroke:#0875d1;stroke-width:3}.lab{font:bold 18px system-ui;fill:#172033}</style>
+<path class="wire" d="M100 25 V165 M520 25 V165 M100 45 H255 M325 45 H520 M100 95 H255 M325 95 H520 M100 145 H255 M325 145 H520"/>
+<rect class="res" x="255" y="32" width="70" height="26" rx="3"/><rect class="res" x="255" y="82" width="70" height="26" rx="3"/><rect class="res" x="255" y="132" width="70" height="26" rx="3"/>
+<text class="lab" x="290" y="25" text-anchor="middle">R₁</text><text class="lab" x="290" y="75" text-anchor="middle">R₂</text><text class="lab" x="290" y="125" text-anchor="middle">R₃</text>
+<text class="lab" x="60" y="100" text-anchor="middle">A</text><text class="lab" x="560" y="100" text-anchor="middle">B</text>
+</svg></div><div class="field"><label for="parallel">2. R équivalente en parallèle</label><input id="parallel" inputmode="decimal"><span class="unit">Ω</span><div class="feedback" id="fb-parallel"></div></div><div class="row actions no-print"><button class="primary" onclick="checkPanel('resistances')">Vérifier</button><button onclick="showKey('resistances')">Afficher le corrigé</button><button onclick="resetPanel('resistances')">Effacer</button></div><div class="score" id="score-resistances"></div><div class="answer-key muted" id="key-resistances"></div></div>
+</section>
+<section id="pont" class="panel hidden">
+<div class="card"><h2>4. Pont diviseur de tension</h2><p>R₁ et R₂ sont en série sous une tension U. Calcule la tension U₂ aux bornes de R₂.</p><div class="diagram" id="pontValues"></div><div class="diagram"><svg viewBox="0 0 620 250" width="100%" role="img" aria-label="Pont diviseur : R1 et R2 en série entre U et 0 V, U2 mesurée aux bornes de R2">
+<style>.wire{stroke:#26364b;stroke-width:3;fill:none;stroke-linecap:round}.res{fill:#fff;stroke:#0875d1;stroke-width:3}.lab{font:bold 18px system-ui;fill:#172033}.val{font:16px system-ui;fill:#172033}.measure{stroke:#0a8a55;stroke-width:3;fill:none;stroke-dasharray:6 5}</style>
+<path class="wire" d="M150 35 H280 M340 35 H450 V215 H150 V35 M150 125 H280 M340 125 H450"/>
+<rect class="res" x="280" y="20" width="60" height="30" rx="3"/><rect class="res" x="280" y="110" width="60" height="30" rx="3"/>
+<text class="lab" x="310" y="14" text-anchor="middle">R₁</text><text class="lab" x="310" y="104" text-anchor="middle">R₂</text>
+<text class="lab" x="55" y="40">+U</text><text class="lab" x="55" y="220">0 V</text>
+<path class="measure" d="M375 125 H420 V215 H375"/><text class="lab" x="435" y="170" fill="#0a8a55">U₂</text>
+<circle cx="450" cy="80" r="5" fill="#26364b"/><text class="val" x="470" y="85">Point milieu</text>
+</svg></div><div class="field"><label for="pontAns">U₂ =</label><input id="pontAns" inputmode="decimal"><span class="unit">V</span><div class="feedback" id="fb-pontAns"></div></div><p class="hint">Indice : U₂ = U × R₂ / (R₁ + R₂)</p><div class="row actions no-print"><button class="primary" onclick="checkPanel('pont')">Vérifier</button><button onclick="showKey('pont')">Afficher le corrigé</button><button onclick="resetPanel('pont')">Effacer</button></div><div class="score" id="score-pont"></div><div class="answer-key muted" id="key-pont"></div></div>
+</section>
+<section id="mixte" class="panel hidden">
+<div class="card"><h2>5. Circuit mixte</h2><p>R₂ et R₃ sont en parallèle ; cet ensemble est en série avec R₁. Calcule les grandeurs demandées.</p><div class="diagram" id="mixValues"></div><div class="diagram"><svg viewBox="0 0 620 250" width="100%" role="img" aria-label="Circuit mixte : R1 en série avec le parallèle R2 et R3">
+<style>.wire{stroke:#26364b;stroke-width:3;fill:none;stroke-linecap:round}.res{fill:#fff;stroke:#0875d1;stroke-width:3}.lab{font:bold 18px system-ui;fill:#172033}.val{font:16px system-ui;fill:#172033}.node{fill:#26364b}</style>
+<path class="wire" d="M65 55 H150 M220 55 H310 M310 55 V185 M310 55 H385 M455 55 H535 V185 H455 M385 185 H310 M65 55 V185 H310"/>
+<rect class="res" x="150" y="40" width="70" height="30" rx="3"/><rect class="res" x="385" y="40" width="70" height="30" rx="3"/><rect class="res" x="385" y="170" width="70" height="30" rx="3"/>
+<text class="lab" x="185" y="32" text-anchor="middle">R₁</text><text class="lab" x="420" y="32" text-anchor="middle">R₂</text><text class="lab" x="420" y="162" text-anchor="middle">R₃</text>
+<text class="lab" x="20" y="45">+Uₑ</text><text class="lab" x="20" y="210">0 V</text>
+<circle class="node" cx="310" cy="55" r="5"/><circle class="node" cx="310" cy="185" r="5"/>
+<text class="val" x="335" y="120">Branches</text><text class="val" x="335" y="140">en parallèle</text>
+</svg></div>
+<div class="field"><label for="mixReq">1. Résistance équivalente totale</label><input id="mixReq" inputmode="decimal"><span class="unit">kΩ</span><div class="feedback" id="fb-mixReq"></div></div>
+<div class="field"><label for="mixI">2. Intensité totale</label><input id="mixI" inputmode="decimal"><span class="unit">mA</span><div class="feedback" id="fb-mixI"></div></div>
+<div class="field"><label for="mixU1">3. Tension aux bornes de R₁</label><input id="mixU1" inputmode="decimal"><span class="unit">V</span><div class="feedback" id="fb-mixU1"></div></div>
+<div class="field"><label for="mixI2">4. Intensité dans R₂</label><input id="mixI2" inputmode="decimal"><span class="unit">mA</span><div class="feedback" id="fb-mixI2"></div></div>
+<div class="row actions no-print"><button class="primary" onclick="checkPanel('mixte')">Vérifier</button><button onclick="showKey('mixte')">Afficher le corrigé</button><button onclick="resetPanel('mixte')">Effacer</button></div><div class="score" id="score-mixte"></div><div class="answer-key muted" id="key-mixte"></div></div>
+</section>
+<p class="muted tiny">Les valeurs sont générées localement dans la page. Pour conserver ou collecter les résultats d’une classe, il faudra une version connectée à un serveur.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const state={level:2,answers:{},verified:{},questions:{}};
+function rand(min,max,step=1){let n=Math.floor((max-min)/step)+1;return +(min+Math.floor(Math.random()*n)*step).toFixed(4)}
+function fmt(n,d=2){return Number(n.toFixed(d)).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:0})}
+function setQ(id,ans,tol,unit,explain){state.questions[id]={ans,tol,unit,explain};}
+function field(id,label,unit,ans,tol,explain){setQ(id,ans,tol,unit,explain);return `<div class="field"><label for="${id}">${label}</label><input id="${id}" inputmode="decimal"><span class="unit">${unit}</span><div class="feedback" id="fb-${id}"></div></div>`}
+function build(){
+state.level=+$('level').value;state.questions={};state.verified={};
+const lv=state.level;
+let U=rand(lv===1?3:5,lv===3?24:12,1),R=[220,330,470,560,680,1000,1200,2200,4700,10000][Math.floor(Math.random()*10)],I=U/R*1000;
+let ohm='';
+ohm+=field('oU','1. U = '+fmt(U)+' V et R = '+R+' Ω : calcule I.','mA',I,Math.max(.03,I*.015),'I = U/R = '+fmt(U)+' / '+R+' = '+fmt(I,3)+' mA');
+let givenI=rand(1,20,1),givenR=R,calcU=givenR*givenI/1000;
+ohm+=field('oR','2. R = '+givenR+' Ω et I = '+givenI+' mA : calcule U.','V',calcU,Math.max(.03,calcU*.015),'U = R × I = '+givenR+' × '+givenI+'/1000 = '+fmt(calcU,3)+' V');
+let r3=[470,1000,2200,4700,10000][Math.floor(Math.random()*5)],i3=rand(2,15,1),u3=r3*i3/1000;
+ohm+=field('oI','3. U = '+fmt(u3)+' V et R = '+r3+' Ω : calcule I.','mA',i3,Math.max(.03,i3*.015),'I = U/R = '+fmt(u3)+' / '+r3+' = '+fmt(i3,3)+' mA');
+$('ohmFields').innerHTML=ohm;
+let n1=rand(5,15,1),n2=rand(3,10,1),n4=rand(2,9,1),n3=n1+n2-n4;if(n3<0){n4=Math.max(1,n1+n2-2);n3=n1+n2-n4}
+$('n1').textContent=n1;$('n2').textContent=n2;$('n4').textContent=n4;setQ('nodeAns',n3,.02,'mA',`Loi des nœuds : i₁ + i₂ = i₃ + i₄, donc i₃ = ${n1} + ${n2} − ${n4} = ${n3} mA.`);
+let vals=[1,2.2,3.3,4.7,6.8,10],r1=vals[Math.floor(Math.random()*vals.length)],r2=vals[Math.floor(Math.random()*vals.length)],r3v=vals[Math.floor(Math.random()*vals.length)],series=r1+r2+r3v,par=1/(1/r1+1/r2+1/r3v);
+$('resValues').innerHTML=`R₁ = ${fmt(r1)} kΩ ; R₂ = ${fmt(r2)} kΩ ; R₃ = ${fmt(r3v)} kΩ`;
+setQ('series',series,.025,'kΩ',`En série : Rₑq = R₁ + R₂ + R₃ = ${fmt(r1)} + ${fmt(r2)} + ${fmt(r3v)} = ${fmt(series,3)} kΩ.`);
+setQ('parallel',par*1000,Math.max(1,par*1000*.015),'Ω',`En parallèle : 1/Rₑq = 1/R₁ + 1/R₂ + 1/R₃. Rₑq ≈ ${fmt(par,3)} kΩ, soit ${Math.round(par*1000)} Ω.`);
+let pu=[5,9,12,15,18][Math.floor(Math.random()*5)],pr1=[1,2.2,3.3,4.7,6.8][Math.floor(Math.random()*5)],pr2=[1,2.2,4.7,10][Math.floor(Math.random()*4)],pu2=pu*pr2/(pr1+pr2);
+$('pontValues').innerHTML=`Données : U = ${pu} V ; R₁ = ${fmt(pr1)} kΩ ; R₂ = ${fmt(pr2)} kΩ.`;
+setQ('pontAns',pu2,.025,'V',`U₂ = U × R₂/(R₁ + R₂) = ${pu} × ${fmt(pr2)}/(${fmt(pr1)} + ${fmt(pr2)}) = ${fmt(pu2,3)} V.`);
+let mu=[9,12,15,18][Math.floor(Math.random()*4)],mr1=[4.7,6.8,10][Math.floor(Math.random()*3)],mr2=[4.7,10,15][Math.floor(Math.random()*3)],mr3=[4.7,10,15][Math.floor(Math.random()*3)];
+if(lv===3){mr1=6.8;mr2=10;mr3=15}
+let rp=mr2*mr3/(mr2+mr3),req=mr1+rp,mi=mu/req,mu1=mi*mr1,mi2=(mu-mu1)/mr2;
+$('mixValues').innerHTML=`Données : Uₑ = ${mu} V ; R₁ = ${fmt(mr1)} kΩ ; R₂ = ${fmt(mr2)} kΩ ; R₃ = ${fmt(mr3)} kΩ.`;
+setQ('mixReq',req,.035,'kΩ',`R₂∥R₃ = (R₂ × R₃)/(R₂ + R₃) = ${fmt(rp,3)} kΩ. Rₑq = R₁ + R₂∥R₃ = ${fmt(req,3)} kΩ.`);
+setQ('mixI',mi,Math.max(.015,mi*.025),'mA',`I = Uₑ/Rₑq = ${mu}/${fmt(req,3)} = ${fmt(mi,3)} mA.`);
+setQ('mixU1',mu1,.04,'V',`U₁ = R₁ × I = ${fmt(mr1)} × ${fmt(mi,3)} = ${fmt(mu1,3)} V.`);
+setQ('mixI2',mi2,Math.max(.015,mi2*.03),'mA',`U₂₃ = Uₑ − U₁ = ${fmt(mu-mu1,3)} V. I₂ = U₂₃/R₂ = ${fmt(mi2,3)} mA.`);
+['ohm','noeuds','resistances','pont','mixte'].forEach(p=>{let s=$('score-'+p);if(s)s.textContent='';let k=$('key-'+p);if(k)k.textContent='';document.querySelectorAll('#'+p+' input').forEach(i=>i.value='');document.querySelectorAll('#'+p+' .feedback').forEach(f=>{f.textContent='';f.className='feedback'});});
+$('levelPill').textContent=['','Niveau 1','Niveau 2','Niveau 3'][lv];updateStats();
+}
+function parse(v){return Number(String(v).trim().replace(/\s/g,'').replace(',','.'))}
+function allIds(panel){return ({ohm:['oU','oR','oI'],noeuds:['nodeAns'],resistances:['series','parallel'],pont:['pontAns'],mixte:['mixReq','mixI','mixU1','mixI2']})[panel]}
+function checkPanel(panel){let ids=allIds(panel),good=0,checked=0;ids.forEach(id=>{let el=$(id),q=state.questions[id],fb=$('fb-'+id);if(!el||!q)return;let raw=el.value.trim();if(!raw){fb.className='feedback bad';fb.textContent='Saisis une réponse.';state.verified[id]=false;return}checked++;let ok=Number.isFinite(parse(raw))&&Math.abs(parse(raw)-q.ans)<=q.tol;state.verified[id]=ok;if(ok){good++;fb.className='feedback good';fb.textContent='Correct !'}else{fb.className='feedback bad';fb.textContent='Pas encore. Vérifie la formule et les unités.'}});$('score-'+panel).textContent=`Résultat : ${good} / ${ids.length}`;updateStats()}
+function showKey(panel){let ids=allIds(panel);$('key-'+panel).textContent=ids.map((id,i)=>`${i+1}. ${state.questions[id].explain}`).join('\n');}
+function resetPanel(panel){allIds(panel).forEach(id=>{$(id).value='';$('fb-'+id).textContent='';$('fb-'+id).className='feedback';delete state.verified[id]});$('score-'+panel).textContent='';$('key-'+panel).textContent='';updateStats()}
+function updateStats(){let ids=Object.keys(state.verified),correct=ids.filter(id=>state.verified[id]).length;const a=$('statCorrect'),b=$('statChecked'),c=$('stat20');if(a)a.textContent=correct;if(b)b.textContent=ids.length;if(c)c.textContent=ids.length?fmt(correct/ids.length*20,1)+'/20':'—';$('progressBar').style.width=(ids.length?correct/Math.max(1,Object.keys(state.questions).length)*100:0)+'%';$('progressText').textContent=`${ids.length} réponse(s) vérifiée(s)`}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.tab))}));
+$('newSet').addEventListener('click',build);$('level').addEventListener('change',build);build();
+</script>
+</body></html>
