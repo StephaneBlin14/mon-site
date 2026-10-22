@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurer un switch Cisco avec PuTTY</title>
+<style>
+:root{--navy:#10243a;--blue:#1769aa;--cyan:#dff4ff;--bg:#f3f6fa;--ink:#1d2939;--muted:#5c6b7a;--green:#147d52;--orange:#9a5700;--line:#d9e2ec}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",Arial,sans-serif}
+header{background:linear-gradient(120deg,#10243a,#1769aa);color:white;padding:34px 20px}
+.wrap{max-width:1100px;margin:auto;padding:0 18px}h1{margin:0 0 8px;font-size:clamp(1.8rem,4vw,2.6rem)}header p{max-width:780px;margin:0;color:#e5f3ff}
+nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;overflow-x:auto}
+nav .wrap{display:flex;gap:8px;padding-top:10px;padding-bottom:10px;white-space:nowrap}
+nav a{color:var(--blue);text-decoration:none;padding:7px 10px;border-radius:8px;font-weight:600}nav a:hover{background:var(--cyan)}
+main{padding:24px 0 50px}.intro,.section,.warning{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 3px 12px #10243a08}
+h2{font-size:1.4rem;color:var(--navy);margin:0 0 12px}h3{margin:18px 0 8px;color:#174f7d;font-size:1.05rem}
+p{margin:8px 0}.muted{color:var(--muted)}.pill{display:inline-block;background:#e5f2ff;color:#15568a;padding:3px 9px;border-radius:999px;font-size:.82rem;font-weight:700}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.step{background:#f7fafc;border:1px solid var(--line);border-radius:10px;padding:14px}.step strong{display:block;color:var(--navy)}
+.cmd{position:relative;background:#101820;color:#d8f5d0;border-radius:9px;padding:14px 95px 14px 15px;margin:9px 0;overflow-wrap:anywhere;font:14px/1.7 Consolas,"Courier New",monospace;white-space:pre-wrap}
+.cmd .copy{position:absolute;right:8px;top:8px;background:#eaf3fb;color:#123b5d;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font:12px Arial,sans-serif}
+.cmd .copy:hover{background:#cce6ff}.comment{color:#9cb1c5}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.95rem}th,td{padding:10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eef5fb;color:#183b59}
+.warning{border-left:5px solid #e5a000;background:#fffaf0}.danger{border-left:5px solid #c33;background:#fff7f7}
+label{display:block;font-weight:650;margin:9px 0 4px}input,select{font:inherit;padding:9px 10px;border:1px solid #bac8d6;border-radius:7px;width:100%;max-width:340px;background:white}
+button.action{border:0;background:var(--blue);color:white;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:650}button.action:hover{background:#105487}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.result{margin-top:12px}
+footer{padding:20px;text-align:center;color:var(--muted);font-size:.9rem}
+@media(max-width:600px){.section,.intro,.warning{padding:15px}.cmd{padding-right:80px}table{font-size:.86rem}th,td{padding:7px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Configurer un switch Cisco avec PuTTY</h1>
+<p>Fiche de référence CLI : accéder au switch, sécuriser l'accès, configurer les interfaces et les VLAN, puis vérifier et sauvegarder.</p>
+</div></header>
+<nav><div class="wrap">
+<a href="#connexion">Connexion</a><a href="#bases">Commandes de base</a><a href="#securite">Sécurité</a><a href="#ip">Adresse IP</a><a href="#vlan">VLAN & ports</a><a href="#verification">Vérifications</a><a href="#sauvegarde">Sauvegarde</a>
+</div></nav>
+<main class="wrap">
+<section class="intro">
+<h2>Avant de commencer</h2>
+<div class="steps">
+<div class="step"><strong>1. Connecter</strong><span class="muted">Relier le PC au port console, ou se connecter par SSH si le réseau est déjà configuré.</span></div>
+<div class="step"><strong>2. Ouvrir PuTTY</strong><span class="muted">Console série : choisir le bon port COM et généralement 9600 bauds, 8 bits, sans parité, 1 bit d'arrêt, contrôle de flux désactivé.</span></div>
+<div class="step"><strong>3. Passer en configuration</strong><span class="muted">Entrer les commandes dans l'ordre et vérifier chaque étape.</span></div>
+</div>
+<p class="muted">Les exemples ci-dessous correspondent à la syntaxe courante des switches Cisco IOS. Certaines commandes varient selon le modèle, la version IOS et les droits disponibles.</p>
+</section>
+
+<section class="section" id="connexion">
+<h2>1. Se connecter au switch</h2>
+<p>Appuyer sur <b>Entrée</b> dans la fenêtre PuTTY. Selon l'état initial, l'invite peut ressembler à <code>Switch&gt;</code> ou demander un identifiant.</p>
+<table><thead><tr><th>Invite</th><th>Signification</th><th>Commande suivante</th></tr></thead><tbody>
+<tr><td><code>Switch&gt;</code></td><td>Mode utilisateur : commandes limitées.</td><td><code>enable</code></td></tr>
+<tr><td><code>Switch#</code></td><td>Mode privilégié : commandes de consultation et administration.</td><td><code>configure terminal</code></td></tr>
+<tr><td><code>Switch(config)#</code></td><td>Mode configuration globale.</td><td>Configurer le switch.</td></tr>
+<tr><td><code>Switch(config-if)#</code></td><td>Configuration d'une interface.</td><td>Configurer le port sélectionné.</td></tr>
+</tbody></table>
+<div class="cmd">enable
+configure terminal</div>
+</section>
+
+<section class="section" id="bases">
+<h2>2. Commandes de base</h2>
+<h3>Nommer le switch et désactiver la recherche DNS</h3>
+<div class="cmd">hostname SW-ATELIER
+no ip domain-lookup</div>
+<p><code>hostname</code> change le nom affiché dans l'invite. <code>no ip domain-lookup</code> évite qu'une faute de frappe soit interprétée comme un nom à résoudre.</p>
+<h3>Se déplacer dans les modes</h3>
+<div class="cmd">end
+configure terminal
+exit
+?
+do show running-config</div>
+<p><code>end</code> revient au mode privilégié. <code>exit</code> remonte d'un niveau. <code>?</code> affiche l'aide disponible. Depuis un sous-mode de configuration, <code>do</code> permet de lancer une commande EXEC, par exemple <code>do show running-config</code>.</p>
+</section>
+
+<section class="section" id="securite">
+<h2>3. Sécuriser les accès</h2>
+<div class="warning"><b>À savoir :</b> les mots de passe ci-dessous sont des exemples pédagogiques. Remplacez-les par des valeurs robustes et conformes à la politique de l'établissement. Ne copiez pas ces exemples sur un réseau de production.</div>
+<h3>Mot de passe du mode privilégié</h3>
+<div class="cmd">enable secret MonMotDePasseFort</div>
+<h3>Mot de passe de la console</h3>
+<div class="cmd">line console 0
+password ConsoleExemple
+login
+exit</div>
+<h3>Accès distant SSH (exemple à adapter)</h3>
+<div class="cmd">ip domain-name atelier.local
+username admin privilege 15 secret MotDePasseFort
+crypto key generate rsa
+ip ssh version 2
+line vty 0 15
+login local
+transport input ssh
+exit</div>
+<p class="muted">La génération RSA peut demander une taille de clé ; choisir une taille adaptée à l'IOS, par exemple 2048 bits si elle est proposée. Certains modèles utilisent <code>line vty 0 4</code>. Configurez d'abord une adresse IP joignable et vérifiez les recommandations de sécurité de votre organisation.</p>
+<h3>Chiffrer les mots de passe de lignes dans la configuration</h3>
+<div class="cmd">service password-encryption</div>
+<p>Cette commande masque les mots de passe de lignes dans l'affichage de la configuration, mais ce mécanisme n'est pas une protection cryptographique forte. Privilégier <code>enable secret</code> et les secrets de comptes.</p>
+</section>
+
+<section class="section" id="ip">
+<h2>4. Configurer l'adresse IP de gestion</h2>
+<p>Sur un switch de couche 2, l'adresse de gestion est souvent placée sur une interface VLAN (SVI), et non directement sur un port physique.</p>
+<div class="cmd">interface vlan 1
+ip address 192.168.1.10 255.255.255.0
+no shutdown
+exit
+ip default-gateway 192.168.1.1</div>
+<p><b>Exemple :</b> le switch a l'adresse <code>192.168.1.10/24</code> et la passerelle du réseau est <code>192.168.1.1</code>. L'interface VLAN doit être active et associée à au moins un port actif dans ce VLAN pour que l'SVI soit opérationnelle sur de nombreux switches.</p>
+<div class="warning">Adaptez l'adresse IP, le masque, le VLAN de gestion et la passerelle à votre plan d'adressage. Vérifiez qu'aucun autre équipement n'utilise déjà cette adresse.</div>
+</section>
+
+<section class="section" id="vlan">
+<h2>5. Créer un VLAN et affecter un port</h2>
+<h3>Créer le VLAN 10</h3>
+<div class="cmd">vlan 10
+name INFORMATIQUE
+exit</div>
+<h3>Placer un port en mode access dans le VLAN 10</h3>
+<div class="cmd">interface gigabitEthernet 0/1
+switchport mode access
+switchport access vlan 10
+no shutdown
+exit</div>
+<p>Adaptez le nom de l'interface à votre modèle : par exemple <code>fastEthernet 0/1</code>, <code>gigabitEthernet 1/0/1</code>, etc.</p>
+<h3>Configurer un lien trunk (si nécessaire)</h3>
+<div class="cmd">interface gigabitEthernet 0/24
+switchport mode trunk
+switchport trunk allowed vlan 10,20
+no shutdown
+exit</div>
+<p>Un trunk transporte plusieurs VLAN entre équipements compatibles. La syntaxe et la négociation du trunk peuvent varier selon le modèle ; ne configurez pas un trunk sur un port utilisateur ordinaire.</p>
+<h3>Éteindre ou réactiver un port</h3>
+<div class="cmd">interface gigabitEthernet 0/2
+shutdown
+no shutdown
+exit</div>
+<p><code>shutdown</code> désactive administrativement le port ; <code>no shutdown</code> le réactive.</p>
+</section>
+
+<section class="section" id="verification">
+<h2>6. Vérifier la configuration</h2>
+<table><thead><tr><th>Commande</th><th>Utilité</th></tr></thead><tbody>
+<tr><td><code>show running-config</code></td><td>Afficher la configuration actuellement en mémoire vive.</td></tr>
+<tr><td><code>show startup-config</code></td><td>Afficher la configuration sauvegardée au démarrage.</td></tr>
+<tr><td><code>show ip interface brief</code></td><td>Voir les interfaces, leurs adresses IP et leur état.</td></tr>
+<tr><td><code>show interfaces status</code></td><td>Voir l'état des ports, le VLAN et la vitesse (si pris en charge).</td></tr>
+<tr><td><code>show vlan brief</code></td><td>Afficher les VLAN et les ports associés.</td></tr>
+<tr><td><code>show interfaces trunk</code></td><td>Vérifier les liens trunk.</td></tr>
+<tr><td><code>show mac address-table</code></td><td>Consulter les adresses MAC apprises par le switch.</td></tr>
+<tr><td><code>show version</code></td><td>Afficher le modèle, la version IOS et des informations de démarrage.</td></tr>
+<tr><td><code>ping 192.168.1.1</code></td><td>Tester la connectivité IP vers une adresse cible.</td></tr>
+</tbody></table>
+<p>Astuce : dans la configuration, <code>show running-config</code> peut être précédé de <code>do</code> lorsque vous êtes encore dans un sous-mode de configuration.</p>
+</section>
+
+<section class="section" id="sauvegarde">
+<h2>7. Sauvegarder la configuration</h2>
+<div class="cmd">end
+copy running-config startup-config</div>
+<p>Valider le nom de destination proposé avec <b>Entrée</b>. La configuration en cours est alors copiée dans la configuration de démarrage, conservée après redémarrage.</p>
+<div class="danger"><b>Attention :</b> si vous oubliez cette étape, vos changements peuvent être perdus au redémarrage. Avant toute modification importante, sauvegardez la configuration existante et assurez-vous de disposer d'un accès de secours.</div>
+</section>
+
+<section class="section">
+<h2>8. Générateur de commandes</h2>
+<p class="muted">Renseignez les champs pour produire un exemple de configuration adapté. Les commandes générées ne sont pas envoyées automatiquement au switch.</p>
+<div class="grid">
+<div><label for="hostname">Nom du switch</label><input id="hostname" value="SW-ATELIER"></div>
+<div><label for="ipaddr">Adresse IP de gestion</label><input id="ipaddr" value="192.168.1.10"></div>
+<div><label for="mask">Masque</label><select id="mask"><option value="255.255.255.0">255.255.255.0 (/24)</option><option value="255.255.255.128">255.255.255.128 (/25)</option><option value="255.255.255.192">255.255.255.192 (/26)</option><option value="255.255.0.0">255.255.0.0 (/16)</option></select></div>
+<div><label for="gateway">Passerelle</label><input id="gateway" value="192.168.1.1"></div>
+<div><label for="vlanid">VLAN de gestion</label><input id="vlanid" type="number" min="1" max="4094" value="1"></div>
+</div>
+<div style="margin-top:14px"><button class="action" onclick="generate()">Générer les commandes</button></div>
+<div id="generated" class="result cmd" aria-live="polite">hostname SW-ATELIER
+interface vlan 1
+ip address 192.168.1.10 255.255.255.0
+no shutdown
+exit
+ip default-gateway 192.168.1.1</div>
+<button class="action" onclick="copyGenerated()">Copier les commandes générées</button>
+<p id="status" class="muted" aria-live="polite"></p>
+</section>
+
+<section class="section">
+<h2>9. Exemple de séquence complète (base)</h2>
+<p>À adapter à votre matériel et à votre réseau avant utilisation.</p>
+<div class="cmd">enable
+configure terminal
+hostname SW-ATELIER
+no ip domain-lookup
+enable secret RemplacerParUnSecretFort
+interface vlan 1
+ip address 192.168.1.10 255.255.255.0
+no shutdown
+exit
+ip default-gateway 192.168.1.1
+end
+show ip interface brief
+show vlan brief
+copy running-config startup-config</div>
+</section>
+</main>
+<footer>Fiche pédagogique — commandes Cisco IOS à vérifier selon le modèle et la version.</footer>
+<script>
+function addCopyButtons(){
+ document.querySelectorAll('.cmd').forEach(el=>{
+  if(el.id==='generated') return;
+  const b=document.createElement('button'); b.className='copy'; b.textContent='Copier';
+  b.onclick=()=>copyText(el.childNodes[0]?.textContent || el.textContent,b);
+  el.appendChild(b);
+ });
+}
+function copyText(text,button){
+ navigator.clipboard.writeText(text.trim()).then(()=>{if(button){let old=button.textContent;button.textContent='Copié !';setTimeout(()=>button.textContent=old,1200)}}).catch(()=>alert('Copie automatique indisponible : sélectionnez puis copiez le texte manuellement.'));
+}
+function generate(){
+ const host=document.getElementById('hostname').value.trim().replace(/\s+/g,'-');
+ const ip=document.getElementById('ipaddr').value.trim();
+ const mask=document.getElementById('mask').value;
+ const gw=document.getElementById('gateway').value.trim();
+ const v=Number(document.getElementById('vlanid').value);
+ if(!host||!ip||!gw||!Number.isInteger(v)||v<1||v>4094){document.getElementById('status').textContent='Veuillez vérifier les champs et saisir un VLAN entre 1 et 4094.';return}
+ const txt=`hostname ${host}\ninterface vlan ${v}\nip address ${ip} ${mask}\nno shutdown\nexit\nip default-gateway ${gw}`;
+ document.getElementById('generated').textContent=txt;
+ document.getElementById('status').textContent='Exemple généré : vérifiez les adresses et la compatibilité avant de l’utiliser.';
+}
+function copyGenerated(){copyText(document.getElementById('generated').textContent);document.getElementById('status').textContent='Si la copie a réussi, les commandes sont dans le presse-papiers.'}
+addCopyButtons();
+</script>
+</body>
+</html>
